@@ -37,13 +37,22 @@ function bd_plugin_uninstall()
 function delete_posts_without_users() {
     global $wpdb; // WordPress database access object
 
+    // Flush the database query cache to ensure updated data is used
+    $wpdb->flush();
+
     // SQL query to delete posts where author_id does not exist in wp_users table
-    $query = "DELETE FROM {$wpdb->prefix}wp_forum_posts 
-              WHERE author_id NOT IN (SELECT ID FROM {$wpdb->prefix}wp_users)";
+    $postquery = "DELETE FROM wp_forum_posts 
+              WHERE author_id NOT IN (SELECT ID FROM wp_users)";
+
+    $topicquery = "DELETE FROM wp_forum_topics 
+    WHERE author_id NOT IN (SELECT ID FROM wp_users)";
 
     // Run the query
-    $wpdb->query($query);
+    $wpdb->query($postquery);   
+    $wpdb->query($topicquery); 
+
 }
 
-// Hook the function to an action, for example, 'admin_init'
-add_action('delete', 'delete_posts_without_users');
+// Hook the function to an action
+add_action('delete_user', 'delete_posts_without_users');
+add_action('delete_users_by_role', 'delete_posts_without_users', 999);
